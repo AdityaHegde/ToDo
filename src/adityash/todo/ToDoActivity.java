@@ -3,6 +3,7 @@ package adityash.todo;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.ListIterator;
 
 import org.apache.commons.io.FileUtils;
 
@@ -13,14 +14,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 
 
 public class ToDoActivity extends ActionBarActivity {
- 	private ArrayList<String> todoItems;
- 	private ArrayAdapter<String> todoItemsAdapter;
+ 	private ArrayList<ToDoItem> todoItems;
+ 	private ToDoItemsAdaptor todoItemsAdapter;
  	private ListView listToDoItems;
  	private EditText etAddNew;
 
@@ -34,7 +34,7 @@ public class ToDoActivity extends ActionBarActivity {
 
     private void setupAdaptor() {
 		setupItems();
-		todoItemsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, todoItems);
+		todoItemsAdapter = new ToDoItemsAdaptor(this, todoItems);
 		listToDoItems = (ListView) findViewById(R.id.listToDoItems);
 		listToDoItems.setAdapter(todoItemsAdapter);
 		etAddNew = (EditText) findViewById(R.id.etAddNew);
@@ -55,21 +55,28 @@ public class ToDoActivity extends ActionBarActivity {
 	private void setupItems() {
 		File filesDir = getFilesDir();
 		File todoFile = new File(filesDir, "todo.txt");
+		todoItems = new ArrayList<ToDoItem>();
 		try {
-			todoItems = new ArrayList<String>(FileUtils.readLines(todoFile));
+			ListIterator<String> lines = new ArrayList<String>(FileUtils.readLines(todoFile)).listIterator();
+			while(lines.hasNext()) {
+				String line = lines.next();
+				boolean check = line.substring(0, 1).equals("1");
+				String label = line.substring(1);
+				todoItems.add(new ToDoItem(label, check));
+			}
 		} catch (IOException e) {
-			todoItems = new ArrayList<String>();
+			
 		}
 	}
 	
 	public void addItem(View v) {
 		String item = etAddNew.getText().toString();
- 		todoItemsAdapter.add(item);
+ 		todoItemsAdapter.add(new ToDoItem(item));
  		etAddNew.setText("");
  		saveItems();
  	}
 	
-	private void saveItems() {
+	public void saveItems() {
 		File filesDir = getFilesDir();
 		File todoFile = new File(filesDir, "todo.txt");
 		try {
