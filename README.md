@@ -9,6 +9,7 @@ Completed user stories:
  * [x] Required: User can view a list of todo items
  * [x] Required: User can add a todo item
  * [x] Required: User can delete a todo item
+ * [x] Optional: User can check finished items
  
 Walkthrough of all user stories:
 
