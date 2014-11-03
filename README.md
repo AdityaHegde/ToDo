@@ -12,5 +12,5 @@ Completed user stories:
  
 Walkthrough of all user stories:
 
-![Video Walkthrough](todo_demp.gif)
+![Video Walkthrough](todo_demo.gif)
 
