@@ -1,59 +1,68 @@
 package adityash.todo;
 
-import java.util.ArrayList;
-
 import android.content.Context;
+import android.database.Cursor;
+import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 
-public class ToDoItemsAdaptor extends ArrayAdapter<ToDoItem> {
-	ArrayList<ToDoItem> todoItems;
+import com.activeandroid.Cache;
+import com.activeandroid.query.Delete;
+import com.activeandroid.query.Select;
+
+public class ToDoItemsAdaptor extends CursorAdapter {
 	
-	public ToDoItemsAdaptor(Context context, ArrayList<ToDoItem> todoItems) {
-		super(context, 0, todoItems);
-		this.todoItems = todoItems;
+	public ToDoItemsAdaptor(Context context, Cursor cursor) {
+		super(context, cursor, 0);
 	}
 	
 	@Override
-    public View getView(final int position, View convertView, ViewGroup parent) {
-		final ToDoItem item = getItem(position);
-		final ToDoItemsAdaptor that = this;
-		
-		if (convertView == null) {
-			convertView = LayoutInflater.from(getContext()).inflate(R.layout.todo_item, parent, false);
-		}
-		
-		CheckBox checkBox = (CheckBox) convertView.findViewById(R.id.cbDone);
-		checkBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+	public View newView(Context context, Cursor cursor, ViewGroup parent) {
+	    return LayoutInflater.from(context).inflate(R.layout.todo_item, parent, false);
+    }
+	
+	@Override
+	public void bindView(View view, Context context, Cursor cursor) {
+		CheckBox checkBox = (CheckBox) view.findViewById(R.id.cbDone);
+	    // Extract properties from cursor
+	    String label = cursor.getString(cursor.getColumnIndexOrThrow("label"));
+	    short checked = cursor.getShort(cursor.getColumnIndexOrThrow("checked"));
+	    final int id = cursor.getInt(cursor.getColumnIndexOrThrow("_id"));
+	    final ToDoItemsAdaptor that = this;
+	    
+	    checkBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+				String tableName = Cache.getTableInfo(ToDoItem.class).getTableName();
+				ToDoItem item = (ToDoItem) new Select().from(ToDoItem.class).where(tableName+".Id = ?", id).execute().toArray()[0];
 				item.checked = isChecked;
-				((ToDoActivity) that.getContext()).saveItems();
+				item.save();
 			}
 			
 		});
-		checkBox.setOnLongClickListener(new OnLongClickListener() {
+	    checkBox.setOnLongClickListener(new OnLongClickListener() {
 
 			@Override
 			public boolean onLongClick(View v) {
-				that.todoItems.remove(position);
-				that.notifyDataSetChanged();
-				((ToDoActivity) that.getContext()).saveItems();
+				String tableName = Cache.getTableInfo(ToDoItem.class).getTableName();
+				new Delete().from(ToDoItem.class).where(tableName+".Id = ?", id).execute();
+				that.reloadCursor();
 				return true;
 			}
 			
 		});
-		
-		checkBox.setText(item.label);
-		checkBox.setChecked(item.checked);
-		
-		return convertView;
+	    
+	    checkBox.setText(label);
+		checkBox.setChecked(checked == 1);
+	}
+	
+	public void reloadCursor() {
+		this.swapCursor(ToDoItem.fetchResultCursor()).close();
 	}
 }
