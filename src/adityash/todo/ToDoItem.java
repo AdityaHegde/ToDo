@@ -33,12 +33,12 @@ public class ToDoItem extends Model {
 	}
 	
 	public static List<ToDoItem> getAll() {
-		return new Select().from(ToDoItem.class).orderBy("checked").execute();
+		return new Select().from(ToDoItem.class).orderBy("checked ASC").execute();
 	}
 	
 	public static Cursor fetchResultCursor() {
 		String tableName = Cache.getTableInfo(ToDoItem.class).getTableName();
-		String resultRecords = new Select(tableName + ".*, " + tableName + ".Id as _id").from(ToDoItem.class).toSql();
+		String resultRecords = new Select(tableName + ".*, " + tableName + ".Id as _id").from(ToDoItem.class).orderBy("checked ASC").toSql();
 		Cursor cursor = Cache.openDatabase().rawQuery(resultRecords, null);
 		return cursor;
 	}
